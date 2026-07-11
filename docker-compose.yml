@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  steady:
+    build: .
+    ports:
+      - "8100:8100"
+    volumes:
+      - steady_data:/app/.steady
+    environment:
+      - STEADY_DIR=/app/.steady
+      - STEADY_PORT=8100
+    restart: unless-stopped
+
+volumes:
+  steady_data:

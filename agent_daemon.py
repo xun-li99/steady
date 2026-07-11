@@ -24,7 +24,7 @@ except ImportError:
 
 
 # ── paths ──────────────────────────────────────────────
-STEADY_DIR      = Path(".steady")
+STEADY_DIR      = Path(os.environ.get("STEADY_DIR", ".steady"))
 HEARTBEAT_FILE  = STEADY_DIR / "heartbeat.json"
 TASK_FILE       = STEADY_DIR / "task.md"
 
@@ -32,7 +32,7 @@ TASK_FILE       = STEADY_DIR / "task.md"
 _diary: "Diary | None" = Diary(STEADY_DIR) if Diary else None
 
 # ── timing defaults ─────────────────────────────────────
-HEARTBEAT_EVERY  = 300        # touch heartbeat every 5m
+HEARTBEAT_EVERY  = int(os.environ.get("STEADY_HEARTBEAT", "300"))  # touch heartbeat every N seconds
 RESTART_COOLDOWN = 1          # seconds between restarts, grows
 MAX_BACKOFF      = 3600       # 1 hour
 HEALTHY_AFTER    = 120        # 2m alive = reset backoff
@@ -87,14 +87,19 @@ def maintenance_window() -> bool:
 
 # ── process management ───────────────────────────────────
 def start_agent(cmd: list[str]) -> subprocess.Popen:
-    """Launch agent process, injecting context via stdin/env."""
+    """Launch agent process, injecting context via stdin/env. Stdout→log file (no pipe blocking)."""
     ctx = load_context()
     env = os.environ.copy()
     env["STEADY_CONTEXT"] = ctx
+    agent_log = STEADY_DIR / "agent_stdout.log"
+    agent_log.parent.mkdir(parents=True, exist_ok=True)
+    log_fh = open(agent_log, "a", encoding="utf-8")
+    log_fh.write(f"\n--- agent start {now_iso()} ---\n")
+    log_fh.flush()
     return subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
+        stdout=log_fh,
         stderr=subprocess.STDOUT,
         text=True,
         env=env,
