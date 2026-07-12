@@ -35,6 +35,7 @@ def bj_now():
 
 def call_deepseek(prompt, max_tokens=80):
     """Real API call — may fail with timeout, rate limit, network error."""
+    import urllib.request as urllib_request
     payload = {
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
@@ -44,12 +45,12 @@ def call_deepseek(prompt, max_tokens=80):
     headers = {"Content-Type": "application/json"}
     if API_KEY:
         headers["Authorization"] = f"Bearer {API_KEY}"
-    req = __import__('urllib').request.Request(
+    req = urllib_request.Request(
         API_URL,
         data=json.dumps(payload).encode("utf-8"),
         headers=headers,
     )
-    with __import__('urllib').request.urlopen(req, timeout=90) as r:
+    with urllib_request.urlopen(req, timeout=90) as r:
         return json.loads(r.read())["choices"][0]["message"]["content"]
 
 
