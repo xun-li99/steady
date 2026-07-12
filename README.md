@@ -18,12 +18,12 @@ That's a real Steady instance running on a $5 VPS in Hangzhou. Hit `/health` to 
 
 ## Crash-recovery data (not marketing — measurements)
 
-Same agent, same task, same crash probability:
+Same agent, same task, 50% crash probability per cycle:
 
-|  | Crashes survived | Items completed | Context preserved |
-|---|---|---|---|
-| **Without Steady** | 0 — dead at cycle 1 | 1 | — |
-| **With Steady** | 4 restarts | 12 | 12/12 (100%) |
+![Crash recovery comparison](crash_recovery.png)
+
+**Without Steady:** dead at cycle 1. 1 item.  
+**With Steady:** 4 restarts, 12 items, 100% context preserved across every crash.
 
 The agent crashed 3 times in a row (each crash killing it after 1 cycle). Steady brought it back every time. On the 4th restart, it stabilized and completed the task.
 
