@@ -24,6 +24,37 @@ def load_heartbeat():
         return json.loads(HEARTBEAT_FILE.read_text(encoding="utf-8"))
     return {"status": "no heartbeat yet", "uptime_seconds": 0}
 
+def load_metrics():
+    """Return crash-recovery stats — what external users need to judge '利'."""
+    hb = load_heartbeat()
+    metrics = {
+        "status": hb.get("status", "unknown"),
+        "uptime_seconds": hb.get("uptime_seconds", 0),
+        "restarts": hb.get("extra", {}).get("restarts", 0),
+        "agent_pid": hb.get("agent_pid"),
+        "last_beat": hb.get("last_beat", ""),
+    }
+    # handoff info
+    handoff_file = STEADY_DIR / "handoff.md"
+    if handoff_file.exists():
+        metrics["handoff"] = handoff_file.read_text(encoding="utf-8")[:500]
+        metrics["handoff_exists"] = True
+    else:
+        metrics["handoff"] = None
+        metrics["handoff_exists"] = False
+    # task info
+    if TASK_FILE.exists():
+        metrics["task"] = TASK_FILE.read_text(encoding="utf-8")[:200]
+    # output from demo agent
+    output_file = STEADY_DIR / "agent_output.txt"
+    if output_file.exists():
+        lines = output_file.read_text(encoding="utf-8").strip().split("\n")
+        metrics["agent_output_lines"] = len(lines)
+    # free_time flag
+    ft_flag = STEADY_DIR / "free_time_flag"
+    metrics["free_time_active"] = ft_flag.exists()
+    return metrics
+
 STATUS_HTML = """<!DOCTYPE html>
 <html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Steady — Agent Reliability Layer</title>
@@ -87,6 +118,8 @@ class SteadyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/health", "/heartbeat"):
             self._send_json(load_heartbeat())
+        elif self.path == "/metrics":
+            self._send_json(load_metrics())
         elif self.path == "/":
             self._send_html(STATUS_HTML)
         else:
