@@ -53,6 +53,29 @@ def load_metrics():
     # free_time flag
     ft_flag = STEADY_DIR / "free_time_flag"
     metrics["free_time_active"] = ft_flag.exists()
+    # crash interval trend — are crashes getting further apart? (real 利)
+    state_file = STEADY_DIR / "real_agent_state.json"
+    if state_file.exists():
+        try:
+            agent_state = json.loads(state_file.read_text(encoding="utf-8"))
+            intervals = agent_state.get("crash_intervals", [])
+            if len(intervals) >= 3:
+                # Simple trend: is the last interval longer than the first?
+                first_half = intervals[:len(intervals)//2]
+                second_half = intervals[len(intervals)//2:]
+                avg_first = sum(first_half) / len(first_half)
+                avg_second = sum(second_half) / len(second_half)
+                metrics["crash_interval_trend"] = {
+                    "count": len(intervals),
+                    "first_half_avg_sec": round(avg_first, 1),
+                    "second_half_avg_sec": round(avg_second, 1),
+                    "trend": "improving" if avg_second > avg_first else ("flat" if avg_second == avg_first else "worsening"),
+                }
+                metrics["crash_intervals"] = intervals[-10:]  # last 10
+            elif len(intervals) > 0:
+                metrics["crash_intervals"] = intervals
+        except Exception:
+            pass
     return metrics
 
 STATUS_HTML = """<!DOCTYPE html>
