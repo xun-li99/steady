@@ -1,0 +1,17 @@
+[Unit]
+Description=Steady Agent Daemon — zero-touch agent reliability
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/steady
+Environment=STEADY_PORT=443
+Environment=STEADY_DIR=/opt/steady/.steady_443
+ExecStart=python3 /opt/steady/steady_api.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/steady/steady_service.log
+StandardError=append:/opt/steady/steady_service.log
+
+[Install]
+WantedBy=multi-user.target
