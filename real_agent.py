@@ -97,11 +97,11 @@ def main():
             print(f"[{bj_now()}] CRASH: {e}", flush=True)
             sys.exit(1)  # Let Steady catch and restart
 
-    # All tasks completed
-    state["all_completed"] = True
-    state["completed_at"] = bj_now()
+    # Loop continuously — more cycles = more real crash opportunities
+    state["loops_completed"] = state.get("loops_completed", 0) + 1
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=1))
-    print(f"[{bj_now()}] ALL DONE. {len(state['completed'])} tasks, {len(state['errors'])} errors, {state['restart_number']} restarts.", flush=True)
+    print(f"[{bj_now()}] LOOP {state['loops_completed']} DONE. {len(state['completed'])} tasks, {len(state['errors'])} errors, {state['restart_number']} restarts. Restarting...", flush=True)
+    sys.exit(0)  # Normal exit — Steady restarts, crash_interval still tracked
 
 if __name__ == "__main__":
     main()
