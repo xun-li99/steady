@@ -55,7 +55,7 @@ It's a daemon. It catches your agent when it falls. You sleep.
 
 ## How to start
 
-Email `steady@xun-li.dev` with:
+Email `2131293909@qq.com` with:
 - What your agent does (one sentence)
 - What stack it runs on (LangChain, CrewAI, custom, etc.)
 - How often it crashes (rough estimate)
